@@ -96,39 +96,43 @@ extract_file() {
 	fi
 
 	# do not rely on extension for file type
-	local file_type=$(file -bizL "$file")
+	local file_type=$(file -biL "$file")
+	local uz_file_type=$(file -bizL "$file")
 	local ext=${file##*.}
 	local cmd=''
-	case "$file_type" in
+	case "$uz_file_type" in
 		*application/x-tar*|*application/zip*|*application/x-zip*|*application/x-cpio*)
-			cmd="bsdtar" ;;
-		*application/x-gzip*)
-			case "$ext" in
-				gz|z|Z) cmd="gzip" ;;
-				*) return;;
-			esac ;;
-		*application/x-bzip*)
-			case "$ext" in
-				bz2|bz) cmd="bzip2" ;;
-				*) return;;
-			esac ;;
-		*application/x-xz*)
-			case "$ext" in
-				xz) cmd="xz" ;;
-				*) return;;
-			esac ;;
+			cmd="tar" ;;
 		*)
-			# See if bsdtar can recognize the file
-			if bsdtar -tf "$file" -q '*' &>/dev/null; then
-				cmd="bsdtar"
-			else
-				return 0
-			fi ;;
+		case "$file_type" in
+			*application/gzip*)
+				case "$ext" in
+					gz|z|Z) cmd="gzip" ;;
+					*) return;;
+				esac ;;
+			*application/bzip*)
+				case "$ext" in
+					bz2|bz) cmd="bzip2" ;;
+					*) return;;
+				esac ;;
+			*application/xz*)
+				case "$ext" in
+					xz) cmd="xz" ;;
+					*) return;;
+				esac ;;
+			*)
+				# See if tar can recognize the file
+				if tar -tf "$file" -q '*' &>/dev/null; then
+					cmd="tar"
+				else
+					return 0
+				fi ;;
+		esac ;;
 	esac
 
 	local ret=0
 	msg2 "$(gettext "Extracting %s with %s")" "$file" "$cmd"
-	if [[ $cmd = "bsdtar" ]]; then
+	if [[ $cmd = "tar" ]]; then
 		$cmd -xf "$file" || ret=$?
 	else
 		rm -f -- "${file%.*}"
