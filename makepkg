@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 #
 #   makepkg - make packages compatible for use with pacman
 #   Generated from makepkg.sh.in; do not edit by hand.
@@ -46,6 +46,9 @@ declare -r confdir='/etc'
 declare -r BUILDSCRIPT='PKGBUILD'
 declare -r startdir="$PWD"
 
+_DIR=`dirname $0`
+LIBRARY="$_DIR/lib"
+MAKEPKG_CONF="$_DIR/makepkg.conf"
 LIBRARY=${LIBRARY:-'/usr/share/makepkg'}
 
 build_options=('ccache' 'distcc' 'buildflags' 'makeflags')
@@ -219,9 +222,9 @@ source_has_signatures() {
 run_pacman() {
 	local cmd
 	if [[ $1 != -@(T|Qq) ]]; then
-		cmd=("$PACMAN_PATH" $PACMAN_OPTS "$@")
+		cmd=( "$PACMAN_PATH" $PACMAN_OPTS "$@")
 	else
-		cmd=("$PACMAN_PATH" "$@")
+		cmd=( "$PACMAN_PATH" "$@")
 	fi
 	if [[ $1 != -@(T|Qq|Q) ]]; then
 		if type -p sudo >/dev/null; then
@@ -339,7 +342,7 @@ get_integlist() {
 	for integ in "${known_hash_algos[@]}"; do
 		local sumname="${integ}sums[@]"
 		if [[ -n ${!sumname} ]]; then
-			integlist+=("$integ")
+			integlist+=( "$integ")
 		fi
 	done
 
@@ -413,7 +416,7 @@ generate_checksums() {
 	if (( $# == 0 )); then
 		IFS=$'\n' read -rd '' -a integlist < <(get_integlist)
 	else
-		integlist=("$@")
+		integlist=( "$@")
 	fi
 
 	local integ
@@ -932,15 +935,15 @@ find_libdepends() {
 			*.so)
 				if [[ ${libdeps[$d]} ]]; then
 					for v in ${libdeps[$d]}; do
-						libdepends+=("$d=$v")
+						libdepends+=( "$d=$v")
 					done
 				else
 					warning "$(gettext "Library listed in %s is not required by any files: %s")" "'depends'" "$d"
-					libdepends+=("$d")
+					libdepends+=( "$d")
 				fi
 				;;
 			*)
-				libdepends+=("$d")
+				libdepends+=( "$d")
 				;;
 		esac
 	done
@@ -965,7 +968,7 @@ find_libprovides() {
 							local sofile=$(LC_ALL=C readelf -d "$fn" 2>/dev/null | sed -n 's/.*Library soname: \[\(.*\)\].*/\1/p')
 							if [[ -z "$sofile" ]]; then
 								warning "$(gettext "Library listed in %s is not versioned: %s")" "'provides'" "$p"
-								libprovides+=("$p")
+								libprovides+=( "$p")
 								continue
 							fi
 
@@ -975,19 +978,19 @@ find_libprovides() {
 							# extract the library major version
 							local soversion="${sofile##*\.so\.}"
 
-							libprovides+=("${p}=${soversion}-${soarch}")
+							libprovides+=( "${p}=${soversion}-${soarch}")
 						else
 							warning "$(gettext "Library listed in %s is not a shared object: %s")" "'provides'" "$p"
-							libprovides+=("$p")
+							libprovides+=( "$p")
 						fi
 					done
 				else
-					libprovides+=("$p")
+					libprovides+=( "$p")
 					missing=1
 				fi
 				;;
 			*)
-				libprovides+=("$p")
+				libprovides+=( "$p")
 				;;
 		esac
 
@@ -1011,12 +1014,12 @@ srcinfo_write_attr() {
 	# $1: attr name
 	# $2: attr values
 
-	local attrname=$1 attrvalues=("${@:2}")
+	local attrname=$1 attrvalues=( "${@:2}")
 
 	# normalize whitespace, strip leading and trailing
-	attrvalues=("${attrvalues[@]//+([[:space:]])/ }")
-	attrvalues=("${attrvalues[@]#[[:space:]]}")
-	attrvalues=("${attrvalues[@]%[[:space:]]}")
+	attrvalues=( "${attrvalues[@]//+([[:space:]])/ }")
+	attrvalues=( "${attrvalues[@]#[[:space:]]}")
+	attrvalues=( "${attrvalues[@]%[[:space:]]}")
 
 	printf "\t$attrname = %s\n" "${attrvalues[@]}"
 }
@@ -1131,8 +1134,8 @@ write_pkginfo() {
 
 	# TODO: all fields should have this treatment
 	local spd="${pkgdesc//+([[:space:]])/ }"
-	spd=("${spd[@]#[[:space:]]}")
-	spd=("${spd[@]%[[:space:]]}")
+	spd=( "${spd[@]#[[:space:]]}")
+	spd=( "${spd[@]%[[:space:]]}")
 
 	printf "pkgdesc = %s\n" "$spd"
 	printf "url = %s\n" "$url"
@@ -1202,7 +1205,7 @@ create_package() {
 				exit 1
 			fi
 			chmod 644 "$dest"
-			comp_files+=("$dest")
+			comp_files+=( "$dest")
 		fi
 	done
 
@@ -1222,7 +1225,7 @@ create_package() {
 	LANG=C bsdtar -czf .MTREE --format=mtree \
 		--options='!all,use-set,type,uid,gid,mode,time,size,md5,sha256,link' \
 		"${comp_files[@]}" *
-	comp_files+=(".MTREE")
+	comp_files+=( ".MTREE")
 
 	msg2 "$(gettext "Compressing package...")"
 	# TODO: Maybe this can be set globally for robustness
@@ -1281,7 +1284,7 @@ create_debug_package() {
 		return
 	fi
 
-	depends=("$pkgname=$(get_full_version)")
+	depends=( "$pkgname=$(get_full_version)")
 	pkgdesc="Detached debugging symbols for $pkgname"
 	pkgname=$pkgname-debug
 
@@ -1341,10 +1344,10 @@ create_srcpackage() {
 	for i in 'changelog' 'install'; do
 		local file files
 
-		[[ ${!i} ]] && files+=("${!i}")
+		[[ ${!i} ]] && files+=( "${!i}")
 		for name in "${pkgname[@]}"; do
 			if extract_function_variable "package_$name" "$i" 0 file; then
-				files+=("$file")
+				files+=( "$file")
 			fi
 		done
 
@@ -1417,10 +1420,10 @@ install_package() {
 	for pkg in ${pkgname[@]}; do
 		fullver=$(get_full_version)
 		pkgarch=$(get_pkg_arch $pkg)
-		pkglist+=("$PKGDEST/${pkg}-${fullver}-${pkgarch}${PKGEXT}")
+		pkglist+=( "$PKGDEST/${pkg}-${fullver}-${pkgarch}${PKGEXT}")
 
 		if [[ -f "$PKGDEST/${pkg}-debug-${fullver}-${pkgarch}${PKGEXT}" ]]; then
-			pkglist+=("$PKGDEST/${pkg}-debug-${fullver}-${pkgarch}${PKGEXT}")
+			pkglist+=( "$PKGDEST/${pkg}-debug-${fullver}-${pkgarch}${PKGEXT}")
 		fi
 	done
 
@@ -1468,10 +1471,10 @@ check_vcs_software() {
 	# we currently only use global depends/makedepends arrays for --syncdeps
 	for attr in depends makedepends; do
 		get_pkgbuild_attribute "$pkg" "$attr" 1 'deps'
-		all_deps+=("${deps[@]}")
+		all_deps+=( "${deps[@]}")
 
 		get_pkgbuild_attribute "$pkg" "${attr}_$CARCH" 1 'deps'
-		all_deps+=("${deps[@]}")
+		all_deps+=( "${deps[@]}")
 	done
 
 	get_all_sources_for_arch 'all_sources'
@@ -1680,7 +1683,7 @@ restore_package_variables() {
 }
 
 run_split_packaging() {
-	local pkgname_backup=("${pkgname[@]}")
+	local pkgname_backup=( "${pkgname[@]}")
 	for pkgname in ${pkgname_backup[@]}; do
 		pkgdir="$pkgdirbase/$pkgname"
 		mkdir "$pkgdir"
@@ -1692,7 +1695,7 @@ run_split_packaging() {
 		create_debug_package
 		restore_package_variables
 	done
-	pkgname=("${pkgname_backup[@]}")
+	pkgname=( "${pkgname_backup[@]}")
 }
 
 # getopt-like parser
@@ -1702,7 +1705,7 @@ parseopts() {
 
 	shift
 	while [[ $1 && $1 != '--' ]]; do
-		longopts+=("$1")
+		longopts+=( "$1")
 		shift
 	done
 	shift
@@ -1711,10 +1714,10 @@ parseopts() {
 		local o longmatch=()
 		for o in "${longopts[@]}"; do
 			if [[ ${o%:} = "$1" ]]; then
-				longmatch=("$o")
+				longmatch=( "$o")
 				break
 			fi
-			[[ ${o%:} = "$1"* ]] && longmatch+=("$o")
+			[[ ${o%:} = "$1"* ]] && longmatch+=( "$o")
 		done
 
 		case ${#longmatch[*]} in
@@ -1755,16 +1758,16 @@ parseopts() {
 						return 1
 					fi
 
-					OPTRET+=("-$opt")
+					OPTRET+=( "-$opt")
 					# option requires optarg
 					if [[ $shortopts = *$opt:* ]]; then
 						# if we're not at the end of the option chunk, the rest is the optarg
 						if (( i < ${#1} - 1 )); then
-							OPTRET+=("${1:i+1}")
+							OPTRET+=( "${1:i+1}")
 							break
 						# if we're at the end, grab the the next positional, if it exists
 						elif (( i == ${#1} - 1 )) && [[ $2 ]]; then
-							OPTRET+=("$2")
+							OPTRET+=( "$2")
 							shift
 							break
 						# parse failure
@@ -1788,16 +1791,16 @@ parseopts() {
 							return 1
 						# --longopt
 						else
-							OPTRET+=("--$opt")
+							OPTRET+=( "--$opt")
 						fi
 						;;
 					1)
 						# --longopt=optarg
 						if [[ $optarg ]]; then
-							OPTRET+=("--$opt" "$optarg")
+							OPTRET+=( "--$opt" "$optarg")
 						# --longopt optarg
 						elif [[ $2 ]]; then
-							OPTRET+=("--$opt" "$2" )
+							OPTRET+=( "--$opt" "$2" )
 							shift
 						# parse failure
 						else
@@ -1820,7 +1823,7 @@ parseopts() {
 				esac
 				;;
 			*) # non-option arg encountered, add it as a parameter
-				unused_argv+=("$1")
+				unused_argv+=( "$1")
 				;;
 		esac
 		shift
@@ -1909,7 +1912,7 @@ if ! type -p gettext >/dev/null; then
 	}
 fi
 
-ARGLIST=("$@")
+ARGLIST=( "$@")
 
 # Parse Command Line Options.
 OPT_SHORT="AcCdefFghiLmop:rRsSV"
@@ -1985,7 +1988,7 @@ done
 extra_environment=()
 while [[ $1 ]]; do
 	if [[ $1 = [_[:alpha:]]*([[:alnum:]_])?(+)=* ]]; then
-		extra_environment+=("$1")
+		extra_environment+=( "$1")
 	fi
 	shift
 done
