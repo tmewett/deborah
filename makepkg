@@ -239,17 +239,7 @@ run_pacman() {
 check_deps() {
 	(( $# > 0 )) || return 0
 
-	local ret=0
-	local pmout
-	pmout=$(run_pacman -T "$@")
-	ret=$?
-
-	if (( ret == 127 )); then #unresolved deps
-		printf "%s\n" "$pmout"
-	elif (( ret )); then
-		error "$(gettext "'%s' returned a fatal error (%i): %s")" "$PACMAN" "$ret" "$pmout"
-		return "$ret"
-	fi
+	dpkg-query -l "$@" >/dev/null
 }
 
 handle_deps() {
@@ -268,7 +258,7 @@ handle_deps() {
 		# install missing deps from binary packages (using pacman -S)
 		msg "$(gettext "Installing missing dependencies...")"
 
-		if ! run_pacman -S --asdeps $deplist; then
+		if ! sudo apt install $deplist; then
 			error "$(gettext "'%s' failed to install missing dependencies.")" "$PACMAN"
 			exit 1 # TODO: error code
 		fi
@@ -291,20 +281,15 @@ resolve_deps() {
 	# deplist cannot be declared like this: local deplist=$(foo)
 	# Otherwise, the return value will depend on the assignment.
 	local deplist
-	deplist="$(set +E; check_deps $*)" || exit 1
-	[[ -z $deplist ]] && return $R_DEPS_SATISFIED
+	deplist="$*"
+	(set +E; check_deps $*) && return $R_DEPS_SATISFIED
 
 	if handle_deps $deplist; then
 		# check deps again to make sure they were resolved
-		deplist="$(set +E; check_deps $*)" || exit 1
-		[[ -z $deplist ]] && return $R_DEPS_SATISFIED
+		(set +E; check_deps $*) && return $R_DEPS_SATISFIED
 	fi
 
 	msg "$(gettext "Missing dependencies:")"
-	local dep
-	for dep in $deplist; do
-		msg2 "$dep"
-	done
 
 	return $R_DEPS_MISSING
 }
