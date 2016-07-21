@@ -1463,11 +1463,6 @@ check_vcs_software() {
 		return $ret
 	fi
 
-	if [[ -z $PACMAN_PATH ]]; then
-		warning "$(gettext "Cannot find the %s binary needed to check VCS source requirements.")" "$PACMAN"
-		return $ret
-	fi
-
 	# we currently only use global depends/makedepends arrays for --syncdeps
 	for attr in depends makedepends; do
 		get_pkgbuild_attribute "$pkg" "$attr" 1 'deps'
@@ -1511,14 +1506,6 @@ check_vcs_software() {
 check_software() {
 	# check for needed software
 	local ret=0
-
-	# check for PACMAN if we need it
-	if (( ! NODEPS || DEP_BIN || RMDEPS || INSTALL )); then
-		if [[ -z $PACMAN_PATH ]]; then
-			error "$(gettext "Cannot find the %s binary required for dependency operations.")" "$PACMAN"
-			ret=1
-		fi
-	fi
 
 	# check for sudo if we will need it during makepkg execution
 	if (( DEP_BIN || RMDEPS || INSTALL )); then
@@ -1999,7 +1986,6 @@ for signal in TERM HUP QUIT; do
 	trap "trap_exit $signal \"$(gettext "%s signal caught. Exiting...")\" \"$signal\"" "$signal"
 done
 trap 'trap_exit INT "$(gettext "Aborted by user! Exiting...")"' INT
-trap 'trap_exit USR1 "$(gettext "An unknown error has occurred. Exiting...")"' ERR
 
 # preserve environment variables and canonicalize path
 [[ -n ${PKGDEST} ]] && _PKGDEST=$(canonicalize_path ${PKGDEST})
@@ -2035,11 +2021,6 @@ if [[ "$MAKEPKG_CONF" = "$confdir/makepkg.conf" ]]; then
 		source_safe "$HOME/.makepkg.conf"
 	fi
 fi
-
-# set pacman command if not already defined
-PACMAN=${PACMAN:-pacman}
-# save full path to command as PATH may change when sourcing /etc/profile
-PACMAN_PATH=$(type -P $PACMAN)
 
 # check if messages are to be printed using color
 if [[ -t 2 && $USE_COLOR != "n" ]] && check_buildenv "color" "y"; then
