@@ -241,10 +241,10 @@ check_deps() {
 
 	# A horrible hack to maintain check_deps' API
 	local f=$(mktemp)
-	local arglist=$(echo "$*" | sed 's/ /\n/g' | sort >f)
+	echo "$*" | sed 's/ /\n/g' | sort >f
 	local query=$(dpkg-query -Wf '${Package}\n' "$@" | sort)
 	local missing=$(echo "$query" | comm -23 f -)
-	rm f
+	rm $f
 
 	printf "%s\n" "$missing"
 }
@@ -1116,20 +1116,13 @@ write_pkginfo() {
 	msg2 "$(gettext "Generating %s file...")" "Debian control"
 
 	printf "Package: %s\n" "$pkgname"
-	if (( SPLITPKG )) || [[ "$pkgbase" != "$pkgname" ]]; then
-		printf "pkgbase = %s\n" "$pkgbase"
-	fi
-
 	local fullver=$(get_full_version)
 	printf "Version: %s\n" "$fullver"
-	if [[ "$fullver" != "$basever" ]]; then
-		printf "basever = %s\n" "$basever"
-	fi
 
 	case $pkgarch in
 		x86_64) pkgarch=amd64 ;;
 		i686) pkgarch=i386 ;;
-		any) pkgarch=all ;;
+		*) pkgarch=all ;;
 	esac
 
 	printf "Description: %s\n" "$pkgdesc"
@@ -1141,10 +1134,6 @@ write_pkginfo() {
 	if [[ $depends ]]; then
 		printf "Depends: "
 		echo "${depends[*]}" | sed 's/ /, /g'
-	fi
-	if [[ $optdepends ]]; then
-		printf "Suggests: "
-		echo "${optdepends[*]}" | sed 's/ /, /g'
 	fi
 }
 
