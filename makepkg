@@ -1126,18 +1126,17 @@ write_pkginfo() {
 		printf "basever = %s\n" "$basever"
 	fi
 
-	# TODO autodetect this. For now, use all.
-	#~ local debarch
-	#~ case $pkgarch in
-		#~ x86_64) debarch=amd64 ;;
-		#~ i686) debarch=i386 ;;
-	#~ esac
+	case $pkgarch in
+		x86_64) pkgarch=amd64 ;;
+		i686) pkgarch=i386 ;;
+		any) pkgarch=all ;;
+	esac
 
 	printf "Description: %s\n" "$pkgdesc"
 	printf "Homepage: %s\n" "$url"
 	printf "Maintainer: %s\n" "$packager"
 	printf "Installed-Size: %s\n" "$size"
-	printf "Architecture: %s\n" "all"
+	printf "Architecture: %s\n" "$pkgarch"
 
 	[[ $depends ]]      && printf "Depends: %s\n"      "${depends[@]// /, }"
 	[[ $optdepends ]]   && printf "Suggests: %s\n"   "${optdepends[@]// /, }"
@@ -1894,6 +1893,12 @@ for signal in TERM HUP QUIT; do
 	trap "trap_exit $signal \"$(gettext "%s signal caught. Exiting...")\" \"$signal\"" "$signal"
 done
 trap 'trap_exit INT "$(gettext "Aborted by user! Exiting...")"' INT
+
+# Autodetect architecture
+case $(uname -m) in
+	x86?64) CARCH=x86_64 ;;
+	i?86) CARCH=i686 ;;
+esac
 
 # preserve environment variables and canonicalize path
 [[ -n ${PKGDEST} ]] && _PKGDEST=$(canonicalize_path ${PKGDEST})
