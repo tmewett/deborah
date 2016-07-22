@@ -1321,9 +1321,9 @@ install_package() {
 	(( ! INSTALL )) && return
 
 	if (( ! SPLITPKG )); then
-		msg "$(gettext "Installing package %s with %s...")" "$pkgname" "$PACMAN -U"
+		msg "$(gettext "Installing package %s with %s...")" "$pkgname" "sudo dpkg -i"
 	else
-		msg "$(gettext "Installing %s package group with %s...")" "$pkgbase" "$PACMAN -U"
+		msg "$(gettext "Installing %s package group with %s...")" "$pkgbase" "sudo dpkg -i"
 	fi
 
 	local fullver pkgarch pkg pkglist
@@ -1340,7 +1340,7 @@ install_package() {
 		fi
 	done
 
-	if ! run_pacman -U "${pkglist[@]}"; then
+	if ! sudo dpkg -i *.deb; then
 		warning "$(gettext "Failed to install built package(s).")"
 		return 0
 	fi
@@ -1753,7 +1753,7 @@ usage() {
 	printf -- "$(gettext "  -f, --force      Overwrite existing package")\n"
 	printf -- "$(gettext "  -g, --geninteg   Generate integrity checks for source files")\n"
 	printf -- "$(gettext "  -h, --help       Show this help message and exit")\n"
-	#~ printf -- "$(gettext "  -i, --install    Install package after successful build")\n"
+	printf -- "$(gettext "  -i, --install    Install package after successful build")\n"
 	printf -- "$(gettext "  -L, --log        Log package build process")\n"
 	printf -- "$(gettext "  -m, --nocolor    Disable colorized output messages")\n"
 	printf -- "$(gettext "  -o, --nobuild    Download and extract files only")\n"
