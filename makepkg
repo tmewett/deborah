@@ -69,7 +69,7 @@ DEP_BIN=0
 FORCE=0
 GENINTEG=0
 HOLDVER=0
-IGNOREARCH=1
+IGNOREARCH=0
 INFAKEROOT=0
 INSTALL=0
 LOGGING=0
@@ -84,7 +84,7 @@ PREPAREFUNC=0
 REPKG=0
 RMDEPS=0
 SKIPCHECKSUMS=0
-SKIPPGPCHECK=0
+SKIPPGPCHECK=1
 SIGNPKG=''
 SPLITPKG=0
 SOURCEONLY=0
@@ -1753,12 +1753,12 @@ usage() {
 	printf -- "$(gettext "  -f, --force      Overwrite existing package")\n"
 	printf -- "$(gettext "  -g, --geninteg   Generate integrity checks for source files")\n"
 	printf -- "$(gettext "  -h, --help       Show this help message and exit")\n"
-	printf -- "$(gettext "  -i, --install    Install package after successful build")\n"
+	#~ printf -- "$(gettext "  -i, --install    Install package after successful build")\n"
 	printf -- "$(gettext "  -L, --log        Log package build process")\n"
 	printf -- "$(gettext "  -m, --nocolor    Disable colorized output messages")\n"
 	printf -- "$(gettext "  -o, --nobuild    Download and extract files only")\n"
 	printf -- "$(gettext "  -p <file>        Use an alternate build script (instead of '%s')")\n" "$BUILDSCRIPT"
-	printf -- "$(gettext "  -r, --rmdeps     Remove installed dependencies after a successful build")\n"
+	#~ printf -- "$(gettext "  -r, --rmdeps     Remove installed dependencies after a successful build")\n"
 	printf -- "$(gettext "  -R, --repackage  Repackage contents of the package without rebuilding")\n"
 	printf -- "$(gettext "  -s, --syncdeps   Install missing dependencies with %s")\n" "pacman"
 	printf -- "$(gettext "  -S, --source     Generate a source-only tarball without downloaded sources")\n"
@@ -1777,15 +1777,8 @@ usage() {
 	printf -- "$(gettext "  --sign           Sign the resulting package with %s")\n" "gpg"
 	printf -- "$(gettext "  --skipchecksums  Do not verify checksums of the source files")\n"
 	printf -- "$(gettext "  --skipinteg      Do not perform any verification checks on source files")\n"
-	printf -- "$(gettext "  --skippgpcheck   Do not verify source files with PGP signatures")\n"
+	#~ printf -- "$(gettext "  --skippgpcheck   Do not verify source files with PGP signatures")\n"
 	printf -- "$(gettext "  --verifysource   Download source files (if needed) and perform integrity checks")\n"
-	echo
-	printf -- "$(gettext "These options can be passed to %s:")\n" "pacman"
-	echo
-	printf -- "$(gettext "  --asdeps         Install packages as non-explicitly installed")\n"
-	printf -- "$(gettext "  --needed         Do not reinstall the targets that are already up to date")\n"
-	printf -- "$(gettext "  --noconfirm      Do not ask for confirmation when resolving dependencies")\n"
-	printf -- "$(gettext "  --noprogressbar  Do not show a progress bar when downloading files")\n"
 	echo
 	printf -- "$(gettext "If %s is not specified, %s will look for '%s'")\n" "-p" "makepkg" "$BUILDSCRIPT"
 	echo
