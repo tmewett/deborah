@@ -1,0 +1,5 @@
+#!/bin/bash
+while true; do
+	read str
+	apt-cache search -n "$str" | cut -d ' ' -f 1 | column
+done
