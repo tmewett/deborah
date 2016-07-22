@@ -1,0 +1,7 @@
+Package: deborah
+Version: 0.1
+Description: Use the Arch Build System on Debian & Ubuntu
+Maintainer: Deborah developers
+Architecture: all
+Depends: fakeroot, bsdtar, rsync
+Suggests: build-essential, git
