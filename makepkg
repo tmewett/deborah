@@ -46,9 +46,6 @@ declare -r confdir='/etc'
 declare -r BUILDSCRIPT='PKGBUILD'
 declare -r startdir="$PWD"
 
-_DIR=`dirname $0`
-LIBRARY="$_DIR/lib"
-MAKEPKG_CONF="$_DIR/makepkg.conf"
 LIBRARY=${LIBRARY:-'/usr/share/makepkg'}
 
 build_options=('ccache' 'distcc' 'buildflags' 'makeflags')
