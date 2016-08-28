@@ -1,0 +1,18 @@
+# 2016-04-04
+* Use Git to clone repos from AUR.
+
+# 2016-01-22
+* Catch OSErrors
+
+# 2015-12-19
+* Added option to resolve package names to package bases.
+
+# 2013-12-10
+* Added `--maintainer` option.
+
+# 2012-10-26
+* Added Maintainer, NumVotes and LastModified to AUR output.
+
+# 2012-03-08
+* Rewrote pbget in Python 3 to use the AUR module and pyalpm.
+* The previous Bash version is still included in the source archive as `pbget.sh`, but it is not installed with the package and it is no longer maintained.
