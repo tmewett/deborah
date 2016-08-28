@@ -28,15 +28,10 @@
 
 # URLs
 ABS_HOST='rsync.archlinux.org'
-AUR_BASE_URL='https://aur.archlinux.org/packages'
+AUR_BASE_URL='https://aur.archlinux.org/cgit/aur.git/snapshot'
 AUR_JSON='https://aur.archlinux.org/rpc.php?type=info&arg='
 SVN_BASE_URL='https://repos.archlinux.org'
-GIT_BASE='http://projects.archlinux.org/svntogit'
-#http://projects.archlinux.org/svntogit/community.git/plain/powerpill/trunk/
-#http://projects.archlinux.org/svntogit/packages.git/plain/pacman/trunk/
-
-# paths
-COMMON_FUNCTIONS_PATH="/usr/share/xyne/bash/common_functions"
+GIT_BASE='http://git.archlinux.org/svntogit'
 
 # options
 OUT_DIR=$(pwd)
@@ -275,7 +270,7 @@ if [ "$USE_AUR" == "true" ]; then
   notify "searching AUR"
   for PKG in ${PKGS[@]}; do
     # Ugly trick to test
-    OUTPUT=$(wget -q -O - "$AUR_BASE_URL/$PKG/$PKG.tar.gz" | \
+    OUTPUT=$(wget -q -O - "$AUR_BASE_URL/$PKG.tar.gz" | \
     bsdtar -x -f - -v 2>&1)
     if [[ $OUTPUT ]]; then
       header "$PKG" "$MAGENTA" "found in AUR:" "  $AUR_BASE_URL/$PKG"
