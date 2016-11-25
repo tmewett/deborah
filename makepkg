@@ -233,19 +233,6 @@ run_pacman() {
 	"${cmd[@]}"
 }
 
-check_deps() {
-	(( $# > 0 )) || return 0
-
-	# A horrible hack to maintain check_deps' API
-	local f=$(mktemp)
-	echo "$*" | sed 's/ /\n/g' | sort >f
-	local query=$(dpkg-query -Wf '${Package}\n' "$@" | sort)
-	local missing=$(echo "$query" | comm -23 f -)
-	rm $f
-
-	printf "%s\n" "$missing"
-}
-
 handle_deps() {
 	local R_DEPS_SATISFIED=0
 	local R_DEPS_MISSING=1
@@ -262,11 +249,11 @@ handle_deps() {
 		# install missing deps from binary packages (using pacman -S)
 		msg "$(gettext "Installing missing dependencies...")"
 
-		if ! sudo apt install $deplist; then
-			error "$(gettext "'%s' failed to install missing dependencies.")" "$PACMAN"
+		if ! deps_install $deplist; then
+			error "$(gettext "'%s' failed to install missing dependencies.")" "Package manager"
 			exit 1 # TODO: error code
 		fi
-		sudo apt-mark auto $deplist
+
 	fi
 
 	# we might need the new system environment
@@ -1098,42 +1085,6 @@ write_srcinfo() {
 	write_srcinfo_content
 }
 
-write_pkginfo() {
-	if [[ -n $PACKAGER ]]; then
-		local packager="$PACKAGER"
-	else
-		local packager="Unknown Packager"
-	fi
-
-	local size="$(/usr/bin/du -sk --apparent-size)"
-	size="${size%%[^0-9]*}"
-
-	merge_arch_attrs
-
-	msg2 "$(gettext "Generating %s file...")" "Debian control"
-
-	printf "Package: %s\n" "$pkgname"
-	local fullver=$(get_full_version)
-	printf "Version: %s\n" "$fullver"
-
-	case $pkgarch in
-		x86_64) pkgarch=amd64 ;;
-		i686) pkgarch=i386 ;;
-		*) pkgarch=all ;;
-	esac
-
-	printf "Description: %s\n" "$pkgdesc"
-	printf "Homepage: %s\n" "$url"
-	printf "Maintainer: %s\n" "$packager"
-	printf "Installed-Size: %s\n" "$size"
-	printf "Architecture: %s\n" "$pkgarch"
-
-	if [[ $depends ]]; then
-		printf "Depends: "
-		echo "${depends[*]}" | sed 's/ /, /g'
-	fi
-}
-
 write_buildinfo() {
 	msg2 "$(gettext "Generating %s file...")" ".BUILDINFO"
 
@@ -1163,11 +1114,17 @@ create_package() {
 	cd_safe "$pkgdir"
 	msg "$(gettext "Creating package \"%s\"...")" "$pkgname"
 
+	# Distro-agnostic logic
+	if [[ -n $PACKAGER ]]; then
+		local packager="$PACKAGER"
+	else
+		local packager="Unknown Packager"
+	fi
 	pkgarch=$(get_pkg_arch)
-	mkdir DEBIAN
-	write_pkginfo > DEBIAN/control
+	local fullver=$(get_full_version)
+	merge_arch_attrs
 
-	dpkg-deb -b . ../..
+	build_package
 }
 
 create_debug_package() {
@@ -1307,9 +1264,9 @@ install_package() {
 	(( ! INSTALL )) && return
 
 	if (( ! SPLITPKG )); then
-		msg "$(gettext "Installing package %s with %s...")" "$pkgname" "sudo dpkg -i"
+		msg "$(gettext "Installing package %s")" "$pkgname"
 	else
-		msg "$(gettext "Installing %s package group with %s...")" "$pkgbase" "sudo dpkg -i"
+		msg "$(gettext "Installing %s package group...")" "$pkgbase"
 	fi
 
 	local fullver pkgarch pkg pkglist
@@ -1326,7 +1283,7 @@ install_package() {
 		fi
 	done
 
-	if ! sudo dpkg -i *.deb; then
+	if ! local_install *.deb; then
 		warning "$(gettext "Failed to install built package(s).")"
 		return 0
 	fi
